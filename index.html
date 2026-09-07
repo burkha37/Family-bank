@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Family Cloud Bank</title>
     <!-- Include Supabase Library for Cloud Syncing -->
-    <script src="https://unpkg.com"></script>
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
     <style>
         :root { --primary: #2e7d32; --secondary: #1565c0; --background: #f5f5f5; --card: #ffffff; --text: #333333; }
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--background); color: var(--text); margin: 0; padding: 20px; }
@@ -96,13 +96,12 @@
 </div>
 
 <script>
-    // ✅ PRE-CONFIGURED WITH YOUR ENCRYPTED CREDENTIALS
     const SUPABASE_URL = "https://frgmoryrkwtytyngxgnn.supabase.co";
     const SUPABASE_KEY = "sb_publishable_zVBgAlXVc182th_LDjIa4g_XStuTYk7";
     const PARENT_PIN = "1234"; 
 
-    // Connect securely to the database
-    const dbClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    // FIXED: Safely initializing the client library to prevent the launch crash
+    const dbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
     let cachedKidsData = [];
 
     async function fetchCloudData() {
@@ -200,3 +199,4 @@
         if (kid && kid.pin === pin) {
             document.getElementById('child-pin').value = '';
             switchScreen('screen-child-dash');
+            document.getElementById('child-welcome').innerText = "👋 Welcome, " + name + "!";
