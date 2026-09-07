@@ -3,9 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Family Cloud Bank</title>
-    <!-- Include Supabase Library for Cloud Syncing -->
-    <script src="https://jsdelivr.net"></script>
+    <title>Family Bank Ledger</title>
     <style>
         :root { --primary: #2e7d32; --secondary: #1565c0; --background: #f5f5f5; --card: #ffffff; --text: #333333; }
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--background); color: var(--text); margin: 0; padding: 20px; }
@@ -68,7 +66,7 @@
         </select>
         <input type="number" id="tx-amount" step="0.01" placeholder="Amount ($)">
         <input type="text" id="tx-reason" placeholder="Reason (e.g., Birthday, Chores)">
-        <button class="btn-parent" onclick="submitTransaction()">Apply Cloud Transaction</button>
+        <button class="btn-parent" onclick="submitTransaction()">Apply Transaction</button>
         <button class="btn-back" onclick="switchScreen('screen-home')" style="margin-top:20px;">Logout</button>
     </div>
 
@@ -96,36 +94,35 @@
 </div>
 
 <script>
-    // ⚠️ REPLACE THESE WITH YOUR ACTUAL SUPABASE CREDS
-    const SUPABASE_URL = "https://frgmoryrkwtytyngxgnn.supabase.co/rest/v1/";
-    const SUPABASE_KEY = "sb_publishable_zVBgAlXVc182th_LDjIa4g_XStuTYk7";
     const PARENT_PIN = "1234"; 
 
-    const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-    let cachedKidsData = [];
+    // ✅ UPDATED: Charlie and Jackie added with their specific 4-digit PINs
+    const initialData = {
+        "Charlie": { pin: "0815", normal_balance: 0, savings_balance: 0, history: [] },
+        "Jackie": { pin: "0915", normal_balance: 0, savings_balance: 0, history: [] }
+    };
 
-    async function fetchCloudData() {
-        const { data, error } = await supabase.from('kids_money').select('*');
-        if (!error && data) {
-            cachedKidsData = data;
-            populateDropdowns();
-        }
+    // Changed name to v2 so your browser automatically refreshes to the new names
+    let cachedKidsData = JSON.parse(localStorage.getItem('localBankDB_v2')) || initialData;
+
+    function saveLocalData() {
+        localStorage.setItem('localBankDB_v2', JSON.stringify(cachedKidsData));
     }
 
     function populateDropdowns() {
         const pSelect = document.getElementById('parent-child-select');
         const cSelect = document.getElementById('child-login-select');
-        pSelect.innerHTML = ""; cSelect.innerHTML = "";
-        cachedKidsData.forEach(kid => {
-            pSelect.innerHTML += `<option value="${kid.name}">${kid.name}</option>`;
-            cSelect.innerHTML += `<option value="${kid.name}">${kid.name}</option>`;
+        pSelect.innerHTML = ""; 
+        cSelect.innerHTML = "";
+        Object.keys(cachedKidsData).forEach(function(name) {
+            pSelect.innerHTML += "<option value='" + name + "'>" + name + "</option>";
+            cSelect.innerHTML += "<option value='" + name + "'>" + name + "</option>";
         });
     }
 
     function switchScreen(screenId) {
-        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+        document.querySelectorAll('.screen').forEach(function(s) { s.classList.remove('active'); });
         document.getElementById(screenId).classList.add('active');
-        fetchCloudData();
     }
 
     function loginParent() {
@@ -133,70 +130,77 @@
             document.getElementById('parent-pin').value = '';
             switchScreen('screen-parent-dash');
             updateParentView();
-        } else { alert('Incorrect Parent PIN!'); }
+        } else { 
+            alert('Incorrect Parent PIN!'); 
+        }
     }
 
     function updateParentView() {
         const name = document.getElementById('parent-child-select').value;
-        const kid = cachedKidsData.find(k => k.name === name);
+        const kid = cachedKidsData[name];
         if(!kid) return;
-        document.getElementById('p-normal-bal').innerText = `$${parseFloat(kid.normal_balance).toFixed(2)}`;
-        document.getElementById('p-savings-bal').innerText = `$${parseFloat(kid.savings_balance).toFixed(2)}`;
+        document.getElementById('p-normal-bal').innerText = "$" + parseFloat(kid.normal_balance).toFixed(2);
+        document.getElementById('p-savings-bal').innerText = "$" + parseFloat(kid.savings_balance).toFixed(2);
     }
 
-    async function submitTransaction() {
+    function submitTransaction() {
         const name = document.getElementById('parent-child-select').value;
         const account = document.getElementById('tx-account').value;
         const type = document.getElementById('tx-type').value;
         const amount = parseFloat(document.getElementById('tx-amount').value);
         const reason = document.getElementById('tx-reason').value || "Allowance/Gift";
 
-        if (isNaN(amount) || amount <= 0) return alert('Enter a valid amount');
-        const kid = cachedKidsData.find(k => k.name === name);
+        if (isNaN(amount) || amount <= 0) {
+            return alert('Enter a valid amount');
+        }
+        
+        const kid = cachedKidsData[name];
         const modifier = type === 'deposit' ? 1 : -1;
 
-        let newNormal = kid.normal_balance;
-        let newSavings = kid.savings_balance;
-        if (account === 'normal') newNormal += (amount * modifier);
-        else newSavings += (amount * modifier);
-
-        let history = kid.history || [];
-        history.unshift({ date: new Date().toLocaleDateString(), account, type, amount, reason });
-
-        const { error } = await supabase.from('kids_money')
-            .update({ normal_balance: newNormal, savings_balance: newSavings, history: history })
-            .eq('name', name);
-
-        if(!error) {
-            alert('Cloud Updated!');
-            document.getElementById('tx-amount').value = '';
-            document.getElementById('tx-reason').value = '';
-            await fetchCloudData();
-            updateParentView();
+        if (account === 'normal') {
+            kid.normal_balance += (amount * modifier);
+        } else {
+            kid.savings_balance += (amount * modifier);
         }
+
+        if (!kid.history) {
+            kid.history = [];
+        }
+        kid.history.unshift({ date: new Date().toLocaleDateString(), account: account, type: type, amount: amount, reason: reason });
+
+        saveLocalData();
+        alert('Transaction Applied!');
+        document.getElementById('tx-amount').value = '';
+        document.getElementById('tx-reason').value = '';
+        updateParentView();
     }
 
     function loginChild() {
         const name = document.getElementById('child-login-select').value;
         const pin = document.getElementById('child-pin').value;
-        const kid = cachedKidsData.find(k => k.name === name);
+        const kid = cachedKidsData[name];
 
         if (kid && kid.pin === pin) {
             document.getElementById('child-pin').value = '';
             switchScreen('screen-child-dash');
-            document.getElementById('child-welcome').innerText = `👋 Welcome, ${name}!`;
-            document.getElementById('c-normal-bal').innerText = `$${parseFloat(kid.normal_balance).toFixed(2)}`;
-            document.getElementById('c-savings-bal').innerText = `$${parseFloat(kid.savings_balance).toFixed(2)}`;
+            document.getElementById('child-welcome').innerText = "👋 Welcome, " + name + "!";
+            document.getElementById('c-normal-bal').innerText = "$" + parseFloat(kid.normal_balance).toFixed(2);
+            document.getElementById('c-savings-bal').innerText = "$" + parseFloat(kid.savings_balance).toFixed(2);
             
             const listEl = document.getElementById('child-tx-list');
             listEl.innerHTML = '';
-            (kid.history || []).forEach(tx => {
-                listEl.innerHTML += `<li class="tx-item">
-                    <span><b>${tx.date}</b> - ${tx.reason} (${tx.account})</span>
-                    <span class="${tx.type==='deposit'?'tx-deposit':'tx-withdraw'}">${tx.type==='deposit'?'+':'-'}$${tx.amount.toFixed(2)}</span>
-                </li>`;
+            (kid.history || []).forEach(function(tx) {
+                var sign = tx.type === 'deposit' ? '+' : '-';
+                var txClass = tx.type === 'deposit' ? 'tx-deposit' : 'tx-withdraw';
+                listEl.innerHTML += "<li class='tx-item'><span><b>" + tx.date + "</b> - " + tx.reason + " (" + tx.account + ")</span><span class='" + txClass + "'>" + sign + "$" + tx.amount.toFixed(2) + "</span></li>";
             });
-        } else { alert('Incorrect PIN!'); }
+        } else { 
+            alert('Incorrect PIN!'); 
+        }
     }
 
-
+    // Initial setup run
+    populateDropdowns();
+</script>
+</body>
+</html>
