@@ -4,196 +4,1668 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Family Cloud Bank</title>
+
     <style>
-        :root { --primary: #2e7d32; --secondary: #1565c0; --background: #f5f5f5; --card: #ffffff; --text: #333333; }
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--background); color: var(--text); margin: 0; padding: 20px; }
-        .container { max-width: 600px; margin: 0 auto; background: var(--card); padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-        h1, h2, h3 { text-align: center; color: #222; }
-        .screen { display: none; }
-        .screen.active { display: block; }
-        button { width: 100%; padding: 12px; border: none; border-radius: 6px; font-size: 16px; cursor: pointer; margin-top: 10px; font-weight: bold; }
-        .btn-parent { background: var(--primary); color: white; }
-        .btn-child { background: var(--secondary); color: white; }
-        .btn-sync { background: #ff9800; color: white; margin-bottom: 15px; }
-        .btn-back { background: #757575; color: white; }
-        input, select { width: 100%; padding: 10px; margin: 8px 0; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; font-size: 16px; }
-        .balance-box { display: flex; justify-content: space-between; margin: 15px 0; gap: 10px; }
-        .balance-card { flex: 1; background: #e8f5e9; padding: 15px; border-radius: 8px; text-align: center; border: 1px solid #c8e6c9; }
-        .balance-card.savings { background: #e3f2fd; border-color: #bbdefb; }
-        .balance-num { font-size: 24px; font-weight: bold; margin-top: 5px; }
-        .tx-list { max-height: 200px; overflow-y: auto; background: #fafafa; border: 1px solid #eee; padding: 10px; border-radius: 6px; list-style: none; margin: 0; }
-        .tx-item { padding: 8px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; font-size: 14px; }
-        .tx-deposit { color: green; } .tx-withdraw { color: red; }
+        :root {
+            --primary: #2e7d32;
+            --secondary: #1565c0;
+            --background: #f5f5f5;
+            --card: #ffffff;
+            --text: #333333;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: var(--background);
+            color: var(--text);
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: var(--card);
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        h1, h2, h3 {
+            text-align: center;
+            color: #222;
+        }
+
+        .screen {
+            display: none;
+        }
+
+        .screen.active {
+            display: block;
+        }
+
+        button {
+            width: 100%;
+            padding: 12px;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            cursor: pointer;
+            margin-top: 10px;
+            font-weight: bold;
+        }
+
+        .btn-parent {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-child {
+            background: var(--secondary);
+            color: white;
+        }
+
+        .btn-sync {
+            background: #ff9800;
+            color: white;
+            margin-bottom: 15px;
+        }
+
+        .btn-back {
+            background: #757575;
+            color: white;
+        }
+
+        input,
+        select {
+            width: 100%;
+            padding: 10px;
+            margin: 8px 0;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            box-sizing: border-box;
+            font-size: 16px;
+        }
+
+        .balance-box {
+            display: flex;
+            justify-content: space-between;
+            margin: 15px 0;
+            gap: 10px;
+        }
+
+        .balance-card {
+            flex: 1;
+            background: #e8f5e9;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            border: 1px solid #c8e6c9;
+        }
+
+        .balance-card.savings {
+            background: #e3f2fd;
+            border-color: #bbdefb;
+        }
+
+        .balance-num {
+            font-size: 24px;
+            font-weight: bold;
+            margin-top: 5px;
+        }
+
+        .tx-list {
+            max-height: 200px;
+            overflow-y: auto;
+            background: #fafafa;
+            border: 1px solid #eee;
+            padding: 10px;
+            border-radius: 6px;
+            list-style: none;
+            margin: 0;
+        }
+
+        .tx-item {
+            padding: 8px;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+            font-size: 14px;
+        }
+
+        .tx-deposit {
+            color: green;
+        }
+
+        .tx-withdraw {
+            color: red;
+        }
+
+        .status {
+            padding: 10px;
+            margin-top: 10px;
+            border-radius: 6px;
+            text-align: center;
+            display: none;
+        }
+
+        .status.success {
+            display: block;
+            background: #e8f5e9;
+            color: #2e7d32;
+        }
+
+        .status.error {
+            display: block;
+            background: #ffebee;
+            color: #c62828;
+        }
+
+        @media (max-width: 500px) {
+            body {
+                padding: 10px;
+            }
+
+            .container {
+                padding: 15px;
+            }
+
+            .balance-box {
+                flex-direction: column;
+            }
+        }
     </style>
 </head>
+
 <body>
 
 <div class="container">
+
     <!-- HOME SCREEN -->
     <div id="screen-home" class="screen active">
+
         <h1>🏠 Family Bank</h1>
-        <p style="text-align:center;">Select portal to log in</p>
-        <button class="btn-parent" onclick="switchScreen('screen-parent-login')">Parent Portal</button>
-        <button class="btn-child" onclick="switchScreen('screen-child-login')">Kids Portal</button>
+
+        <p style="text-align:center;">
+            Select portal to log in
+        </p>
+
+        <button
+            class="btn-parent"
+            onclick="switchScreen('screen-parent-login')">
+            Parent Portal
+        </button>
+
+        <button
+            class="btn-child"
+            onclick="switchScreen('screen-child-login')">
+            Kids Portal
+        </button>
+
     </div>
+
 
     <!-- PARENT LOGIN -->
     <div id="screen-parent-login" class="screen">
+
         <h2>🔒 Parent Login</h2>
-        <input type="password" id="parent-pin" placeholder="Enter Parent PIN (Default: 1234)">
-        <button class="btn-parent" onclick="loginParent()">Login</button>
-        <button class="btn-back" onclick="switchScreen('screen-home')">Back</button>
+
+        <input
+            type="password"
+            id="parent-pin"
+            placeholder="Enter Parent PIN (Default: 1234)">
+
+        <button
+            class="btn-parent"
+            onclick="loginParent()">
+            Login
+        </button>
+
+        <button
+            class="btn-back"
+            onclick="switchScreen('screen-home')">
+            Back
+        </button>
+
     </div>
+
 
     <!-- PARENT DASHBOARD -->
     <div id="screen-parent-dash" class="screen">
-        <h2>🛠️ Parent Control Panel</h2>
-        
-        <!-- Cloud Sync Button Built to Protect UI Flow -->
-        <button class="btn-sync" onclick="fetchCloudData()">🔄 Sync with Database Cloud</button>
 
-        <label><b>1. Select Child:</b></label>
-        <select id="parent-child-select" onchange="updateParentView()"></select>
+        <h2>🛠️ Parent Control Panel</h2>
+
+        <button
+            class="btn-sync"
+            onclick="fetchCloudData(true)">
+            🔄 Sync with Database Cloud
+        </button>
+
+        <div id="parent-status" class="status"></div>
+
+        <label>
+            <b>1. Select Child:</b>
+        </label>
+
+        <select
+            id="parent-child-select"
+            onchange="updateParentView()">
+        </select>
+
 
         <div class="balance-box">
-            <div class="balance-card">Normal Balance<div id="p-normal-bal" class="balance-num">$0.00</div></div>
-            <div class="balance-card savings">Savings Balance<div id="p-savings-bal" class="balance-num">$0.00</div></div>
+
+            <div class="balance-card">
+                Normal Balance
+                <div
+                    id="p-normal-bal"
+                    class="balance-num">
+                    $0.00
+                </div>
+            </div>
+
+            <div class="balance-card savings">
+                Savings Balance
+                <div
+                    id="p-savings-bal"
+                    class="balance-num">
+                    $0.00
+                </div>
+            </div>
+
         </div>
+
+
         <hr>
-        <label><b>2. Add Transaction:</b></label>
+
+
+        <label>
+            <b>2. Add Transaction:</b>
+        </label>
+
         <select id="tx-account">
-            <option value="normal">Normal Account</option>
-            <option value="savings">Savings Account</option>
+
+            <option value="normal">
+                Normal Account
+            </option>
+
+            <option value="savings">
+                Savings Account
+            </option>
+
         </select>
+
+
         <select id="tx-type">
-            <option value="deposit">Deposit (+)</option>
-            <option value="withdraw">Withdraw (-)</option>
+
+            <option value="deposit">
+                Deposit (+)
+            </option>
+
+            <option value="withdraw">
+                Withdraw (-)
+            </option>
+
         </select>
-        <input type="number" id="tx-amount" step="0.01" placeholder="Amount ($)">
-        <input type="text" id="tx-reason" placeholder="Reason (e.g., Birthday, Chores)">
-        <button class="btn-parent" onclick="submitTransaction()">Apply Cloud Transaction</button>
-        <button class="btn-back" onclick="switchScreen('screen-home')" style="margin-top:20px;">Logout</button>
+
+
+        <input
+            type="number"
+            id="tx-amount"
+            step="0.01"
+            min="0"
+            placeholder="Amount ($)">
+
+
+        <input
+            type="text"
+            id="tx-reason"
+            placeholder="Reason (e.g., Birthday, Chores)">
+
+
+        <button
+            class="btn-parent"
+            onclick="submitTransaction()">
+            Apply Cloud Transaction
+        </button>
+
+
+        <button
+            class="btn-back"
+            onclick="logout()"
+            style="margin-top:20px;">
+            Logout
+        </button>
+
     </div>
+
 
     <!-- CHILD LOGIN -->
     <div id="screen-child-login" class="screen">
+
         <h2>👦 Kid Login</h2>
-        <label>Select Your Name:</label>
-        <select id="child-login-select"></select>
-        <input type="password" id="child-pin" placeholder="Enter your 4-digit PIN">
-        <button class="btn-child" onclick="loginChild()">View My Balances</button>
-        <button class="btn-back" onclick="switchScreen('screen-home')">Back</button>
+
+        <label>
+            Select Your Name:
+        </label>
+
+        <select id="child-login-select">
+        </select>
+
+
+        <input
+            type="password"
+            id="child-pin"
+            maxlength="4"
+            inputmode="numeric"
+            placeholder="Enter your 4-digit PIN">
+
+
+        <button
+            class="btn-child"
+            onclick="loginChild()">
+            View My Balances
+        </button>
+
+
+        <button
+            class="btn-back"
+            onclick="switchScreen('screen-home')">
+            Back
+        </button>
+
     </div>
+
 
     <!-- CHILD DASHBOARD -->
     <div id="screen-child-dash" class="screen">
-        <h2 id="child-welcome">Welcome!</h2>
+
+        <h2 id="child-welcome">
+            Welcome!
+        </h2>
+
+
         <div class="balance-box">
-            <div class="balance-card">🛒 Spending Money<div id="c-normal-bal" class="balance-num">$0.00</div></div>
-            <div class="balance-card savings">🐷 Piggy Bank (Savings)<div id="c-savings-bal" class="balance-num">$0.00</div></div>
+
+            <div class="balance-card">
+
+                🛒 Spending Money
+
+                <div
+                    id="c-normal-bal"
+                    class="balance-num">
+                    $0.00
+                </div>
+
+            </div>
+
+
+            <div class="balance-card savings">
+
+                🐷 Piggy Bank (Savings)
+
+                <div
+                    id="c-savings-bal"
+                    class="balance-num">
+                    $0.00
+                </div>
+
+            </div>
+
         </div>
-        <h3>📜 Recent History</h3>
-        <ul id="child-tx-list" class="tx-list"></ul>
-        <button class="btn-back" onclick="switchScreen('screen-home')" style="margin-top:20px;">Logout</button>
+
+
+        <h3>
+            📜 Recent History
+        </h3>
+
+
+        <ul
+            id="child-tx-list"
+            class="tx-list">
+        </ul>
+
+
+        <button
+            class="btn-back"
+            onclick="switchScreen('screen-home')"
+            style="margin-top:20px;">
+            Logout
+        </button>
+
     </div>
+
 </div>
 
-<script>
-    const API_URL = "https://supabase.co";
-    const API_KEY = "sb_publishable_zVBgAlXVc182th_LDjIa4g_XStuTYk7";
-    const PARENT_PIN = "1234"; 
 
-    // Absolute fallback profiles running locally so UI elements cannot stall out
+<script>
+
+    /*
+     * ============================================================
+     * SUPABASE SETTINGS
+     * ============================================================
+     */
+
+    const API_URL =
+        "https://frgmoryrkwtytyngxgnn.supabase.co/rest/v1/kids_money";
+
+    /*
+     * IMPORTANT:
+     * Put your existing sb_publishable_... key between the quotes.
+     *
+     * DO NOT use a service_role or secret key here.
+     */
+
+    const API_KEY =
+        "YOUR_EXISTING_PUBLISHABLE_KEY";
+
+
+    /*
+     * Parent PIN
+     */
+
+    const PARENT_PIN = "1234";
+
+
+    /*
+     * ============================================================
+     * LOCAL FALLBACK DATA
+     * ============================================================
+     *
+     * If Supabase is temporarily unavailable, the app can still
+     * open and display these two profiles.
+     */
+
     let cachedKidsData = [
-        { name: "Charlie", pin: "0815", normal_balance: 0, savings_balance: 0, history: [] },
-        { name: "Jackie", pin: "0915", normal_balance: 0, savings_balance: 0, history: [] }
+
+        {
+            name: "Charlie",
+            pin: "0815",
+            normal_balance: 0,
+            savings_balance: 0,
+            history: []
+        },
+
+        {
+            name: "Jackie",
+            pin: "0915",
+            normal_balance: 0,
+            savings_balance: 0,
+            history: []
+        }
+
     ];
 
-    function makeCloudRequest(url, method, body, callback) {
-        var xhr = new XMLHttpRequest();
-        xhr.open(method, url, true);
-        xhr.setRequestHeader("apikey", API_KEY);
-        xhr.setRequestHeader("Authorization", "Bearer " + API_KEY);
-        xhr.setRequestHeader("Content-Type", "application/json");
-        xhr.setRequestHeader("Prefer", "return=representation");
-        xhr.onreadystatechange = function () {
-            if (xhr.readyState === 4) {
-                if (xhr.status >= 200 && xhr.status < 300) {
-                    try {
-                        var data = JSON.parse(xhr.responseText);
-                        callback(null, data);
-                    } catch(e) { callback(null, []); }
-                } else {
-                    callback(xhr.responseText || "API Error", null);
-                }
-            }
-        };
-        xhr.timeout = 5000;
-        xhr.ontimeout = function () { callback("Timeout", null); };
-        xhr.send(body ? JSON.stringify(body) : null);
+
+    /*
+     * ============================================================
+     * STATUS MESSAGE
+     * ============================================================
+     */
+
+    function showStatus(message, type) {
+
+        var status =
+            document.getElementById("parent-status");
+
+        if (!status) {
+            return;
+        }
+
+        status.innerText = message;
+
+        status.className =
+            "status " + type;
+
+        setTimeout(function () {
+
+            status.className = "status";
+
+        }, 5000);
     }
 
-    function fetchCloudData() {
-        makeCloudRequest(API_URL + "?select=*", "GET", null, function(err, data) {
-            if (!err && data && data.length > 0) {
-                cachedKidsData = data;
-                populateDropdowns();
-                updateParentView();
-                alert("Database Cloud Synced Successfully! 🎉");
-            } else if (err) {
-                alert("Database Sync Paused: Browser or firewall is actively blocking connection link.");
-            }
-        });
+
+    /*
+     * ============================================================
+     * SUPABASE REQUEST
+     * ============================================================
+     */
+
+    function makeCloudRequest(
+        url,
+        method,
+        body,
+        callback
+    ) {
+
+        var xhr =
+            new XMLHttpRequest();
+
+
+        xhr.open(
+            method,
+            url,
+            true
+        );
+
+
+        /*
+         * Supabase authentication headers
+         */
+
+        xhr.setRequestHeader(
+            "apikey",
+            API_KEY
+        );
+
+        xhr.setRequestHeader(
+            "Authorization",
+            "Bearer " + API_KEY
+        );
+
+        xhr.setRequestHeader(
+            "Content-Type",
+            "application/json"
+        );
+
+        xhr.setRequestHeader(
+            "Prefer",
+            "return=representation"
+        );
+
+
+        xhr.onreadystatechange =
+            function () {
+
+                if (xhr.readyState !== 4) {
+                    return;
+                }
+
+
+                if (
+                    xhr.status >= 200 &&
+                    xhr.status < 300
+                ) {
+
+                    try {
+
+                        var data =
+                            xhr.responseText
+                                ? JSON.parse(xhr.responseText)
+                                : [];
+
+                        callback(
+                            null,
+                            data
+                        );
+
+                    } catch (e) {
+
+                        callback(
+                            null,
+                            []
+                        );
+                    }
+
+                } else {
+
+                    console.error(
+                        "Supabase HTTP Error:",
+                        xhr.status,
+                        xhr.responseText
+                    );
+
+                    callback(
+                        xhr.responseText ||
+                        "Supabase API Error",
+                        null
+                    );
+                }
+
+            };
+
+
+        xhr.timeout = 10000;
+
+
+        xhr.ontimeout =
+            function () {
+
+                callback(
+                    "Connection timed out",
+                    null
+                );
+
+            };
+
+
+        xhr.onerror =
+            function () {
+
+                callback(
+                    "Network connection error",
+                    null
+                );
+
+            };
+
+
+        xhr.send(
+            body
+                ? JSON.stringify(body)
+                : null
+        );
+
     }
+
+
+    /*
+     * ============================================================
+     * FETCH DATA FROM SUPABASE
+     * ============================================================
+     */
+
+    function fetchCloudData(showAlert) {
+
+        if (typeof showAlert === "undefined") {
+            showAlert = true;
+        }
+
+
+        makeCloudRequest(
+
+            API_URL + "?select=*",
+
+            "GET",
+
+            null,
+
+            function (err, data) {
+
+                if (
+                    !err &&
+                    Array.isArray(data)
+                ) {
+
+                    /*
+                     * Replace local data with database data.
+                     */
+
+                    cachedKidsData = data;
+
+
+                    /*
+                     * Make sure history is usable.
+                     */
+
+                    cachedKidsData.forEach(
+                        function (kid) {
+
+                            if (
+                                !Array.isArray(
+                                    kid.history
+                                )
+                            ) {
+
+                                kid.history = [];
+
+                            }
+
+                        }
+                    );
+
+
+                    populateDropdowns();
+
+                    updateParentView();
+
+
+                    if (showAlert) {
+
+                        alert(
+                            "Database Cloud Synced Successfully! 🎉"
+                        );
+
+                    }
+
+                } else {
+
+                    console.error(
+                        "Supabase Sync Error:",
+                        err
+                    );
+
+
+                    if (showAlert) {
+
+                        alert(
+                            "Could not connect to the database.\n\n" +
+                            "The app will continue using its local data."
+                        );
+
+                    }
+
+                }
+
+            }
+        );
+
+    }
+
+
+    /*
+     * ============================================================
+     * POPULATE CHILD DROPDOWNS
+     * ============================================================
+     */
 
     function populateDropdowns() {
-        var pSelect = document.getElementById('parent-child-select');
-        var cSelect = document.getElementById('child-login-select');
-        var currentP = pSelect.value;
-        var currentC = cSelect.value;
 
-        pSelect.innerHTML = ""; cSelect.innerHTML = "";
-        cachedKidsData.forEach(function(kid) {
-            pSelect.innerHTML += "<option value='" + kid.name + "'>" + kid.name + "</option>";
-            cSelect.innerHTML += "<option value='" + kid.name + "'>" + kid.name + "</option>";
-        });
+        var pSelect =
+            document.getElementById(
+                "parent-child-select"
+            );
 
-        if(currentP) pSelect.value = currentP;
-        if(currentC) cSelect.value = currentC;
+        var cSelect =
+            document.getElementById(
+                "child-login-select"
+            );
+
+
+        if (!pSelect || !cSelect) {
+            return;
+        }
+
+
+        var currentP =
+            pSelect.value;
+
+        var currentC =
+            cSelect.value;
+
+
+        pSelect.innerHTML = "";
+
+        cSelect.innerHTML = "";
+
+
+        cachedKidsData.forEach(
+            function (kid) {
+
+                /*
+                 * Parent dropdown
+                 */
+
+                var pOption =
+                    document.createElement(
+                        "option"
+                    );
+
+                pOption.value =
+                    kid.name;
+
+                pOption.textContent =
+                    kid.name;
+
+                pSelect.appendChild(
+                    pOption
+                );
+
+
+                /*
+                 * Child dropdown
+                 */
+
+                var cOption =
+                    document.createElement(
+                        "option"
+                    );
+
+                cOption.value =
+                    kid.name;
+
+                cOption.textContent =
+                    kid.name;
+
+                cSelect.appendChild(
+                    cOption
+                );
+
+            }
+        );
+
+
+        /*
+         * Preserve previous selections when possible.
+         */
+
+        if (currentP) {
+            pSelect.value = currentP;
+        }
+
+        if (currentC) {
+            cSelect.value = currentC;
+        }
+
+
+        /*
+         * If nothing was selected, select first child.
+         */
+
+        if (
+            !pSelect.value &&
+            pSelect.options.length > 0
+        ) {
+
+            pSelect.selectedIndex = 0;
+
+        }
+
+
+        if (
+            !cSelect.value &&
+            cSelect.options.length > 0
+        ) {
+
+            cSelect.selectedIndex = 0;
+
+        }
+
+
+        updateParentView();
+
     }
 
-    // Instant screen transitions bypassing startup network calls entirely
+
+    /*
+     * ============================================================
+     * SCREEN NAVIGATION
+     * ============================================================
+     */
+
     function switchScreen(screenId) {
-        document.querySelectorAll('.screen').forEach(function(s) { s.classList.remove('active'); });
-        document.getElementById(screenId).classList.add('active');
+
+        document
+            .querySelectorAll(".screen")
+            .forEach(
+                function (screen) {
+
+                    screen.classList.remove(
+                        "active"
+                    );
+
+                }
+            );
+
+
+        var target =
+            document.getElementById(
+                screenId
+            );
+
+
+        if (target) {
+
+            target.classList.add(
+                "active"
+            );
+
+        } else {
+
+            console.error(
+                "Screen not found:",
+                screenId
+            );
+
+        }
+
     }
+
+
+    /*
+     * ============================================================
+     * PARENT LOGIN
+     * ============================================================
+     */
 
     function loginParent() {
-        if (document.getElementById('parent-pin').value === PARENT_PIN) {
-            document.getElementById('parent-pin').value = '';
-            switchScreen('screen-parent-dash');
+
+        var pin =
+            document.getElementById(
+                "parent-pin"
+            ).value;
+
+
+        if (pin === PARENT_PIN) {
+
+            document.getElementById(
+                "parent-pin"
+            ).value = "";
+
+
+            switchScreen(
+                "screen-parent-dash"
+            );
+
+
+            populateDropdowns();
+
             updateParentView();
-        } else { alert('Incorrect Parent PIN!'); }
+
+
+            /*
+             * Refresh from Supabase.
+             */
+
+            fetchCloudData(false);
+
+        } else {
+
+            alert(
+                "Incorrect Parent PIN!"
+            );
+
+        }
+
     }
+
+
+    /*
+     * ============================================================
+     * PARENT BALANCE DISPLAY
+     * ============================================================
+     */
 
     function updateParentView() {
-        var name = document.getElementById('parent-child-select').value;
-        var kid = cachedKidsData.find(function(k) { return k.name === name; });
-        if(!kid) return;
-        document.getElementById('p-normal-bal').innerText = "$" + parseFloat(kid.normal_balance || 0).toFixed(2);
-        document.getElementById('p-savings-bal').innerText = "$" + parseFloat(kid.savings_balance || 0).toFixed(2);
+
+        var select =
+            document.getElementById(
+                "parent-child-select"
+            );
+
+
+        if (!select) {
+            return;
+        }
+
+
+        var name =
+            select.value;
+
+
+        var kid =
+            cachedKidsData.find(
+                function (k) {
+
+                    return k.name === name;
+
+                }
+            );
+
+
+        if (!kid) {
+            return;
+        }
+
+
+        var normal =
+            parseFloat(
+                kid.normal_balance || 0
+            );
+
+
+        var savings =
+            parseFloat(
+                kid.savings_balance || 0
+            );
+
+
+        document.getElementById(
+            "p-normal-bal"
+        ).innerText =
+            "$" + normal.toFixed(2);
+
+
+        document.getElementById(
+            "p-savings-bal"
+        ).innerText =
+            "$" + savings.toFixed(2);
+
     }
 
+
+    /*
+     * ============================================================
+     * SUBMIT TRANSACTION
+     * ============================================================
+     */
+
     function submitTransaction() {
-        var name = document.getElementById('parent-child-select').value;
-        var account = document.getElementById('tx-account').value;
-        var type = document.getElementById('tx-type').value;
-        var amount = parseFloat(document.getElementById('tx-amount').value);
-        var reason = document.getElementById('tx-reason').value || "Allowance/Gift";
 
-        if (isNaN(amount) || amount <= 0) return alert('Enter a valid amount');
-        var kid = cachedKidsData.find(function(k) { return k.name === name; });
-        var modifier = type === 'deposit' ? 1 : -1;
+        var name =
+            document.getElementById(
+                "parent-child-select"
+            ).value;
 
-        var newNormal = parseFloat(kid.normal_balance || 0);
-        var newSavings = parseFloat(kid.savings_balance || 0);
+
+        var account =
+            document.getElementById(
+                "tx-account"
+            ).value;
+
+
+        var type =
+            document.getElementById(
+                "tx-type"
+            ).value;
+
+
+        var amount =
+            parseFloat(
+                document.getElementById(
+                    "tx-amount"
+                ).value
+            );
+
+
+        var reason =
+            document.getElementById(
+                "tx-reason"
+            ).value.trim();
+
+
+        if (!reason) {
+
+            reason =
+                "Allowance/Gift";
+
+        }
+
+
+        /*
+         * Validate amount.
+         */
+
+        if (
+            isNaN(amount) ||
+            amount <= 0
+        ) {
+
+            alert(
+                "Enter a valid amount."
+            );
+
+            return;
+
+        }
+
+
+        /*
+         * Find child.
+         */
+
+        var kid =
+            cachedKidsData.find(
+                function (k) {
+
+                    return k.name === name;
+
+                }
+            );
+
+
+        if (!kid) {
+
+            alert(
+                "Could not find that child."
+            );
+
+            return;
+
+        }
+
+
+        /*
+         * Deposit = positive
+         * Withdrawal = negative
+         */
+
+        var modifier =
+            type === "deposit"
+                ? 1
+                : -1;
+
+
+        /*
+         * Current balances.
+         */
+
+        var newNormal =
+            parseFloat(
+                kid.normal_balance || 0
+            );
+
+
+        var newSavings =
+            parseFloat(
+                kid.savings_balance || 0
+            );
+
+
+        /*
+         * Apply transaction.
+         */
+
+        if (account === "normal") {
+
+            newNormal +=
+                amount * modifier;
+
+        } else {
+
+            newSavings +=
+                amount * modifier;
+
+        }
+
+
+        /*
+         * Prevent negative balances.
+         */
+
+        if (
+            newNormal < 0 ||
+            newSavings < 0
+        ) {
+
+            alert(
+                "The balance cannot go below $0.00."
+            );
+
+            return;
+
+        }
+
+
+        /*
+         * Make a copy of transaction history.
+         */
+
+        var history =
+            Array.isArray(kid.history)
+                ? kid.history.slice()
+                : [];
+
+
+        /*
+         * Add newest transaction
+         * to beginning of history.
+         */
+
+        history.unshift({
+
+            date:
+                new Date().toISOString(),
+
+            account:
+                account,
+
+            type:
+                type,
+
+            amount:
+                Number(
+                    amount.toFixed(2)
+                ),
+
+            reason:
+                reason
+
+        });
+
+
+        /*
+         * Keep history at a reasonable size.
+         */
+
+        if (history.length > 100) {
+
+            history =
+                history.slice(0, 100);
+
+        }
+
+
+        /*
+         * Data to send to Supabase.
+         */
+
+        var updatedKid = {
+
+            normal_balance:
+                Number(
+                    newNormal.toFixed(2)
+                ),
+
+            savings_balance:
+                Number(
+                    newSavings.toFixed(2)
+                ),
+
+            history:
+                history
+
+        };
+
+
+        /*
+         * Make sure we have an ID.
+         */
+
+        if (!kid.id) {
+
+            alert(
+                "This child record does not have a database ID."
+            );
+
+            return;
+
+        }
+
+
+        /*
+         * Update only this child.
+         */
+
+        var updateURL =
+            API_URL +
+            "?id=eq." +
+            encodeURIComponent(
+                kid.id
+            );
+
+
+        makeCloudRequest(
+
+            updateURL,
+
+            "PATCH",
+
+            updatedKid,
+
+            function (err, data) {
+
+                if (err) {
+
+                    console.error(
+                        "Transaction error:",
+                        err
+                    );
+
+
+                    alert(
+                        "Transaction failed.\n\n" +
+                        "Supabase returned an error. " +
+                        "If the database connection is working, " +
+                        "the next thing to check is the table's RLS policies."
+                    );
+
+                    return;
+
+                }
+
+
+                /*
+                 * Update local copy.
+                 */
+
+                kid.normal_balance =
+                    updatedKid.normal_balance;
+
+                kid.savings_balance =
+                    updatedKid.savings_balance;
+
+                kid.history =
+                    updatedKid.history;
+
+
+                /*
+                 * Update parent display.
+                 */
+
+                updateParentView();
+
+
+                /*
+                 * Clear form.
+                 */
+
+                document.getElementById(
+                    "tx-amount"
+                ).value = "";
+
+
+                document.getElementById(
+                    "tx-reason"
+                ).value = "";
+
+
+                /*
+                 * Show success.
+                 */
+
+                var sign =
+                    type === "deposit"
+                        ? "+"
+                        : "-";
+
+
+                alert(
+                    "Transaction saved! 🎉\n\n" +
+                    sign +
+                    "$" +
+                    amount.toFixed(2) +
+                    " to " +
+                    name +
+                    "'s " +
+                    (account === "normal"
+                        ? "Normal"
+                        : "Savings") +
+                    " Account."
+                );
+
+            }
+
+        );
+
+    }
+
+
+    /*
+     * ============================================================
+     * CHILD LOGIN
+     * ============================================================
+     */
+
+    function loginChild() {
+
+        var name =
+            document.getElementById(
+                "child-login-select"
+            ).value;
+
+
+        var pin =
+            document.getElementById(
+                "child-pin"
+            ).value;
+
+
+        var kid =
+            cachedKidsData.find(
+                function (k) {
+
+                    return k.name === name;
+
+                }
+            );
+
+
+        if (!kid) {
+
+            alert(
+                "Could not find that child."
+            );
+
+            return;
+
+        }
+
+
+        /*
+         * Convert database PIN to string
+         * so 0815 works correctly.
+         */
+
+        if (
+            String(kid.pin) !==
+            String(pin)
+        ) {
+
+            alert(
+                "Incorrect PIN!"
+            );
+
+            return;
+
+        }
+
+
+        /*
+         * Clear PIN field.
+         */
+
+        document.getElementById(
+            "child-pin"
+        ).value = "";
+
+
+        /*
+         * Welcome message.
+         */
+
+        document.getElementById(
+            "child-welcome"
+        ).innerText =
+            "Welcome, " +
+            kid.name +
+            "!";
+
+
+        /*
+         * Balances.
+         */
+
+        document.getElementById(
+            "c-normal-bal"
+        ).innerText =
+            "$" +
+            parseFloat(
+                kid.normal_balance || 0
+            ).toFixed(2);
+
+
+        document.getElementById(
+            "c-savings-bal"
+        ).innerText =
+            "$" +
+            parseFloat(
+                kid.savings_balance || 0
+            ).toFixed(2);
+
+
+        /*
+         * Transaction history.
+         */
+
+        var list =
+            document.getElementById(
+                "child-tx-list"
+            );
+
+
+        list.innerHTML = "";
+
+
+        var history =
+            Array.isArray(kid.history)
+                ? kid.history
+                : [];
+
+
+        if (history.length === 0) {
+
+            var emptyItem =
+                document.createElement(
+                    "li"
+                );
+
+            emptyItem.className =
+                "tx-item";
+
+            emptyItem.innerText =
+                "No transactions yet.";
+
+            list.appendChild(
+                emptyItem
+            );
+
+        } else {
+
+            history
+                .slice(0, 20)
+                .forEach(
+                    function (tx) {
+
+                        var li =
+                            document.createElement(
+                                "li"
+                            );
+
+
+                        li.className =
+                            "tx-item";
+
+
+                        var left =
+                            document.createElement(
+                                "span"
+                            );
+
+
+                        var right =
+                            document.createElement(
+                                "span"
+                            );
+
+
+                        left.innerText =
+                            tx.reason ||
+                            "Transaction";
+
+
+                        var sign =
+                            tx.type === "deposit"
+                                ? "+"
+                                : "-";
+
+
+                        right.innerText =
+                            sign +
+                            "$" +
+                            parseFloat(
+                                tx.amount || 0
+                            ).toFixed(2);
+
+
+                        if (
+                            tx.type ===
+                            "deposit"
+                        ) {
+
+                            right.className =
+                                "tx-deposit";
+
+                        } else {
+
+                            right.className =
+                                "tx-withdraw";
+
+                        }
+
+
+                        li.appendChild(
+                            left
+                        );
+
+                        li.appendChild(
+                            right
+                        );
+
+
+                        list.appendChild(
+                            li
+                        );
+
+                    }
+                );
+
+        }
+
+
+        /*
+         * Show child dashboard.
+         */
+
+        switchScreen(
+            "screen-child-dash"
+        );
+
+    }
+
+
+    /*
+     * ============================================================
+     * LOGOUT
+     * ============================================================
+     */
+
+    function logout() {
+
+        document.getElementById(
+            "parent-pin"
+        ).value = "";
+
+        document.getElementById(
+            "child-pin"
+        ).value = "";
+
+        switchScreen(
+            "screen-home"
+        );
+
+    }
+
+
+    /*
+     * ============================================================
+     * STARTUP
+     * ============================================================
+     */
+
+    document.addEventListener(
+        "DOMContentLoaded",
+        function () {
+
+            /*
+             * Populate the app immediately
+             * using the fallback data.
+             */
+
+            populateDropdowns();
+
+
+            /*
+             * Then try to retrieve the
+             * real data from Supabase.
+             */
+
+            fetchCloudData(false);
+
+        }
+    );
+
+</script>
+
+</body>
+</html>
