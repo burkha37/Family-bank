@@ -213,7 +213,7 @@
         <input
             type="password"
             id="parent-pin"
-            placeholder="Enter Parent PIN (Default: 1234)">
+            placeholder="Enter Parent PIN">
 
         <button
             class="btn-parent"
@@ -249,28 +249,34 @@
 
         <select
             id="parent-child-select"
-            onchange="updateParentView()">
+            onchange="updateParentView">
         </select>
 
 
         <div class="balance-box">
 
             <div class="balance-card">
+
                 Normal Balance
+
                 <div
                     id="p-normal-bal"
                     class="balance-num">
                     $0.00
                 </div>
+
             </div>
 
             <div class="balance-card savings">
+
                 Savings Balance
+
                 <div
                     id="p-savings-bal"
                     class="balance-num">
                     $0.00
                 </div>
+
             </div>
 
         </div>
@@ -440,41 +446,22 @@
 
 <script>
 
-    /*
-     * ============================================================
-     * SUPABASE SETTINGS
-     * ============================================================
-     */
+    /* ============================================================
+       SUPABASE CONNECTION
+       ============================================================ */
 
     const API_URL =
         "https://frgmoryrkwtytyngxgnn.supabase.co/rest/v1/kids_money";
 
-    /*
-     * IMPORTANT:
-     * Put your existing sb_publishable_... key between the quotes.
-     *
-     * DO NOT use a service_role or secret key here.
-     */
-
     const API_KEY =
-        "YOUR_EXISTING_PUBLISHABLE_KEY";
-
-
-    /*
-     * Parent PIN
-     */
+        "sb_publishable_zVBgAlXVc182th_LDjIa4g_XStuTYk7";
 
     const PARENT_PIN = "1234";
 
 
-    /*
-     * ============================================================
-     * LOCAL FALLBACK DATA
-     * ============================================================
-     *
-     * If Supabase is temporarily unavailable, the app can still
-     * open and display these two profiles.
-     */
+    /* ============================================================
+       FALLBACK DATA
+       ============================================================ */
 
     let cachedKidsData = [
 
@@ -497,39 +484,9 @@
     ];
 
 
-    /*
-     * ============================================================
-     * STATUS MESSAGE
-     * ============================================================
-     */
-
-    function showStatus(message, type) {
-
-        var status =
-            document.getElementById("parent-status");
-
-        if (!status) {
-            return;
-        }
-
-        status.innerText = message;
-
-        status.className =
-            "status " + type;
-
-        setTimeout(function () {
-
-            status.className = "status";
-
-        }, 5000);
-    }
-
-
-    /*
-     * ============================================================
-     * SUPABASE REQUEST
-     * ============================================================
-     */
+    /* ============================================================
+       SUPABASE REQUEST FUNCTION
+       ============================================================ */
 
     function makeCloudRequest(
         url,
@@ -549,24 +506,23 @@
         );
 
 
-        /*
-         * Supabase authentication headers
-         */
-
         xhr.setRequestHeader(
             "apikey",
             API_KEY
         );
+
 
         xhr.setRequestHeader(
             "Authorization",
             "Bearer " + API_KEY
         );
 
+
         xhr.setRequestHeader(
             "Content-Type",
             "application/json"
         );
+
 
         xhr.setRequestHeader(
             "Prefer",
@@ -591,7 +547,9 @@
 
                         var data =
                             xhr.responseText
-                                ? JSON.parse(xhr.responseText)
+                                ? JSON.parse(
+                                    xhr.responseText
+                                )
                                 : [];
 
                         callback(
@@ -605,12 +563,13 @@
                             null,
                             []
                         );
+
                     }
 
                 } else {
 
                     console.error(
-                        "Supabase HTTP Error:",
+                        "Supabase Error:",
                         xhr.status,
                         xhr.responseText
                     );
@@ -620,6 +579,7 @@
                         "Supabase API Error",
                         null
                     );
+
                 }
 
             };
@@ -659,16 +619,19 @@
     }
 
 
-    /*
-     * ============================================================
-     * FETCH DATA FROM SUPABASE
-     * ============================================================
-     */
+    /* ============================================================
+       GET DATA FROM SUPABASE
+       ============================================================ */
 
     function fetchCloudData(showAlert) {
 
-        if (typeof showAlert === "undefined") {
+        if (
+            typeof showAlert ===
+            "undefined"
+        ) {
+
             showAlert = true;
+
         }
 
 
@@ -687,16 +650,8 @@
                     Array.isArray(data)
                 ) {
 
-                    /*
-                     * Replace local data with database data.
-                     */
-
                     cachedKidsData = data;
 
-
-                    /*
-                     * Make sure history is usable.
-                     */
 
                     cachedKidsData.forEach(
                         function (kid) {
@@ -723,7 +678,7 @@
                     if (showAlert) {
 
                         alert(
-                            "Database Cloud Synced Successfully! 🎉"
+                            "Database synced successfully! 🎉"
                         );
 
                     }
@@ -739,8 +694,7 @@
                     if (showAlert) {
 
                         alert(
-                            "Could not connect to the database.\n\n" +
-                            "The app will continue using its local data."
+                            "Could not connect to the database."
                         );
 
                     }
@@ -748,16 +702,15 @@
                 }
 
             }
+
         );
 
     }
 
 
-    /*
-     * ============================================================
-     * POPULATE CHILD DROPDOWNS
-     * ============================================================
-     */
+    /* ============================================================
+       POPULATE DROPDOWNS
+       ============================================================ */
 
     function populateDropdowns() {
 
@@ -766,19 +719,26 @@
                 "parent-child-select"
             );
 
+
         var cSelect =
             document.getElementById(
                 "child-login-select"
             );
 
 
-        if (!pSelect || !cSelect) {
+        if (
+            !pSelect ||
+            !cSelect
+        ) {
+
             return;
+
         }
 
 
         var currentP =
             pSelect.value;
+
 
         var currentC =
             cSelect.value;
@@ -792,40 +752,38 @@
         cachedKidsData.forEach(
             function (kid) {
 
-                /*
-                 * Parent dropdown
-                 */
-
                 var pOption =
                     document.createElement(
                         "option"
                     );
 
+
                 pOption.value =
                     kid.name;
 
+
                 pOption.textContent =
                     kid.name;
+
 
                 pSelect.appendChild(
                     pOption
                 );
 
 
-                /*
-                 * Child dropdown
-                 */
-
                 var cOption =
                     document.createElement(
                         "option"
                     );
 
+
                 cOption.value =
                     kid.name;
 
+
                 cOption.textContent =
                     kid.name;
+
 
                 cSelect.appendChild(
                     cOption
@@ -835,22 +793,21 @@
         );
 
 
-        /*
-         * Preserve previous selections when possible.
-         */
-
         if (currentP) {
-            pSelect.value = currentP;
+
+            pSelect.value =
+                currentP;
+
         }
+
 
         if (currentC) {
-            cSelect.value = currentC;
+
+            cSelect.value =
+                currentC;
+
         }
 
-
-        /*
-         * If nothing was selected, select first child.
-         */
 
         if (
             !pSelect.value &&
@@ -877,11 +834,9 @@
     }
 
 
-    /*
-     * ============================================================
-     * SCREEN NAVIGATION
-     * ============================================================
-     */
+    /* ============================================================
+       SCREEN NAVIGATION
+       ============================================================ */
 
     function switchScreen(screenId) {
 
@@ -910,23 +865,14 @@
                 "active"
             );
 
-        } else {
-
-            console.error(
-                "Screen not found:",
-                screenId
-            );
-
         }
 
     }
 
 
-    /*
-     * ============================================================
-     * PARENT LOGIN
-     * ============================================================
-     */
+    /* ============================================================
+       PARENT LOGIN
+       ============================================================ */
 
     function loginParent() {
 
@@ -936,7 +882,9 @@
             ).value;
 
 
-        if (pin === PARENT_PIN) {
+        if (
+            pin === PARENT_PIN
+        ) {
 
             document.getElementById(
                 "parent-pin"
@@ -953,10 +901,6 @@
             updateParentView();
 
 
-            /*
-             * Refresh from Supabase.
-             */
-
             fetchCloudData(false);
 
         } else {
@@ -970,11 +914,9 @@
     }
 
 
-    /*
-     * ============================================================
-     * PARENT BALANCE DISPLAY
-     * ============================================================
-     */
+    /* ============================================================
+       UPDATE PARENT BALANCES
+       ============================================================ */
 
     function updateParentView() {
 
@@ -1008,37 +950,29 @@
         }
 
 
-        var normal =
-            parseFloat(
-                kid.normal_balance || 0
-            );
-
-
-        var savings =
-            parseFloat(
-                kid.savings_balance || 0
-            );
-
-
         document.getElementById(
             "p-normal-bal"
         ).innerText =
-            "$" + normal.toFixed(2);
+            "$" +
+            parseFloat(
+                kid.normal_balance || 0
+            ).toFixed(2);
 
 
         document.getElementById(
             "p-savings-bal"
         ).innerText =
-            "$" + savings.toFixed(2);
+            "$" +
+            parseFloat(
+                kid.savings_balance || 0
+            ).toFixed(2);
 
     }
 
 
-    /*
-     * ============================================================
-     * SUBMIT TRANSACTION
-     * ============================================================
-     */
+    /* ============================================================
+       SUBMIT TRANSACTION
+       ============================================================ */
 
     function submitTransaction() {
 
@@ -1082,27 +1016,19 @@
         }
 
 
-        /*
-         * Validate amount.
-         */
-
         if (
             isNaN(amount) ||
             amount <= 0
         ) {
 
             alert(
-                "Enter a valid amount."
+                "Please enter a valid amount."
             );
 
             return;
 
         }
 
-
-        /*
-         * Find child.
-         */
 
         var kid =
             cachedKidsData.find(
@@ -1125,20 +1051,11 @@
         }
 
 
-        /*
-         * Deposit = positive
-         * Withdrawal = negative
-         */
-
         var modifier =
             type === "deposit"
                 ? 1
                 : -1;
 
-
-        /*
-         * Current balances.
-         */
 
         var newNormal =
             parseFloat(
@@ -1152,11 +1069,9 @@
             );
 
 
-        /*
-         * Apply transaction.
-         */
-
-        if (account === "normal") {
+        if (
+            account === "normal"
+        ) {
 
             newNormal +=
                 amount * modifier;
@@ -1168,10 +1083,6 @@
 
         }
 
-
-        /*
-         * Prevent negative balances.
-         */
 
         if (
             newNormal < 0 ||
@@ -1187,20 +1098,11 @@
         }
 
 
-        /*
-         * Make a copy of transaction history.
-         */
-
         var history =
             Array.isArray(kid.history)
                 ? kid.history.slice()
                 : [];
 
-
-        /*
-         * Add newest transaction
-         * to beginning of history.
-         */
 
         history.unshift({
 
@@ -1224,21 +1126,15 @@
         });
 
 
-        /*
-         * Keep history at a reasonable size.
-         */
-
-        if (history.length > 100) {
+        if (
+            history.length > 100
+        ) {
 
             history =
                 history.slice(0, 100);
 
         }
 
-
-        /*
-         * Data to send to Supabase.
-         */
 
         var updatedKid = {
 
@@ -1258,24 +1154,16 @@
         };
 
 
-        /*
-         * Make sure we have an ID.
-         */
-
         if (!kid.id) {
 
             alert(
-                "This child record does not have a database ID."
+                "This child record is missing its database ID."
             );
 
             return;
 
         }
 
-
-        /*
-         * Update only this child.
-         */
 
         var updateURL =
             API_URL +
@@ -1305,9 +1193,7 @@
 
                     alert(
                         "Transaction failed.\n\n" +
-                        "Supabase returned an error. " +
-                        "If the database connection is working, " +
-                        "the next thing to check is the table's RLS policies."
+                        "This may be caused by Supabase Row Level Security (RLS) settings."
                     );
 
                     return;
@@ -1315,30 +1201,20 @@
                 }
 
 
-                /*
-                 * Update local copy.
-                 */
-
                 kid.normal_balance =
                     updatedKid.normal_balance;
 
+
                 kid.savings_balance =
                     updatedKid.savings_balance;
+
 
                 kid.history =
                     updatedKid.history;
 
 
-                /*
-                 * Update parent display.
-                 */
-
                 updateParentView();
 
-
-                /*
-                 * Clear form.
-                 */
 
                 document.getElementById(
                     "tx-amount"
@@ -1349,10 +1225,6 @@
                     "tx-reason"
                 ).value = "";
 
-
-                /*
-                 * Show success.
-                 */
 
                 var sign =
                     type === "deposit"
@@ -1368,9 +1240,11 @@
                     " to " +
                     name +
                     "'s " +
-                    (account === "normal"
-                        ? "Normal"
-                        : "Savings") +
+                    (
+                        account === "normal"
+                            ? "Normal"
+                            : "Savings"
+                    ) +
                     " Account."
                 );
 
@@ -1381,11 +1255,9 @@
     }
 
 
-    /*
-     * ============================================================
-     * CHILD LOGIN
-     * ============================================================
-     */
+    /* ============================================================
+       CHILD LOGIN
+       ============================================================ */
 
     function loginChild() {
 
@@ -1422,11 +1294,6 @@
         }
 
 
-        /*
-         * Convert database PIN to string
-         * so 0815 works correctly.
-         */
-
         if (
             String(kid.pin) !==
             String(pin)
@@ -1441,18 +1308,10 @@
         }
 
 
-        /*
-         * Clear PIN field.
-         */
-
         document.getElementById(
             "child-pin"
         ).value = "";
 
-
-        /*
-         * Welcome message.
-         */
 
         document.getElementById(
             "child-welcome"
@@ -1461,10 +1320,6 @@
             kid.name +
             "!";
 
-
-        /*
-         * Balances.
-         */
 
         document.getElementById(
             "c-normal-bal"
@@ -1484,10 +1339,6 @@
             ).toFixed(2);
 
 
-        /*
-         * Transaction history.
-         */
-
         var list =
             document.getElementById(
                 "child-tx-list"
@@ -1503,18 +1354,23 @@
                 : [];
 
 
-        if (history.length === 0) {
+        if (
+            history.length === 0
+        ) {
 
             var emptyItem =
                 document.createElement(
                     "li"
                 );
 
+
             emptyItem.className =
                 "tx-item";
 
+
             emptyItem.innerText =
                 "No transactions yet.";
+
 
             list.appendChild(
                 emptyItem
@@ -1569,8 +1425,7 @@
 
 
                         if (
-                            tx.type ===
-                            "deposit"
+                            tx.type === "deposit"
                         ) {
 
                             right.className =
@@ -1588,6 +1443,7 @@
                             left
                         );
 
+
                         li.appendChild(
                             right
                         );
@@ -1603,10 +1459,6 @@
         }
 
 
-        /*
-         * Show child dashboard.
-         */
-
         switchScreen(
             "screen-child-dash"
         );
@@ -1614,11 +1466,9 @@
     }
 
 
-    /*
-     * ============================================================
-     * LOGOUT
-     * ============================================================
-     */
+    /* ============================================================
+       LOGOUT
+       ============================================================ */
 
     function logout() {
 
@@ -1626,9 +1476,11 @@
             "parent-pin"
         ).value = "";
 
+
         document.getElementById(
             "child-pin"
         ).value = "";
+
 
         switchScreen(
             "screen-home"
@@ -1637,28 +1489,15 @@
     }
 
 
-    /*
-     * ============================================================
-     * STARTUP
-     * ============================================================
-     */
+    /* ============================================================
+       START APPLICATION
+       ============================================================ */
 
     document.addEventListener(
         "DOMContentLoaded",
         function () {
 
-            /*
-             * Populate the app immediately
-             * using the fallback data.
-             */
-
             populateDropdowns();
-
-
-            /*
-             * Then try to retrieve the
-             * real data from Supabase.
-             */
 
             fetchCloudData(false);
 
