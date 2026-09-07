@@ -4,8 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Family Cloud Bank</title>
-    <!-- Alternate Fallback CDN for Supabase -->
-    <script src="https://jsdelivr.net"></script>
     <style>
         :root { --primary: #2e7d32; --secondary: #1565c0; --background: #f5f5f5; --card: #ffffff; --text: #333333; }
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--background); color: var(--text); margin: 0; padding: 20px; }
@@ -96,47 +94,46 @@
 </div>
 
 <script>
-    const SUPABASE_URL = "https://frgmoryrkwtytyngxgnn.supabase.co";
-    const SUPABASE_KEY = "sb_publishable_zVBgAlXVc182th_LDjIa4g_XStuTYk7";
+    const API_URL = "https://supabase.co";
+    const API_KEY = "sb_publishable_zVBgAlXVc182th_LDjIa4g_XStuTYk7";
     const PARENT_PIN = "1234"; 
 
-    let dbClient = null;
     let cachedKidsData = [];
 
-    // Safety initialization checker to avoid freeze scenarios
-    function initSupabase() {
-        try {
-            if (window.supabase && typeof window.supabase.createClient === 'function') {
-                dbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-            } else if (typeof supabase !== 'undefined' && typeof supabase.createClient === 'function') {
-                dbClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    function makeCloudRequest(url, method, body, callback) {
+        var xhr = new XMLHttpRequest();
+        xhr.open(method, url, true);
+        xhr.setRequestHeader("apikey", API_KEY);
+        xhr.setRequestHeader("Authorization", "Bearer " + API_KEY);
+        xhr.setRequestHeader("Content-Type", "application/json");
+        xhr.setRequestHeader("Prefer", "return=representation");
+        xhr.onreadystatechange = function () {
+            if (xhr.readyState === 4) {
+                if (xhr.status >= 200 && xhr.status < 300) {
+                    var data = JSON.parse(xhr.responseText);
+                    callback(null, data);
+                } else {
+                    callback(xhr.responseText || "API Error", null);
+                }
             }
-        } catch(e) {
-            console.error("Initialization wrapper error:", e);
-        }
+        };
+        xhr.send(body ? JSON.stringify(body) : null);
     }
 
-    async function fetchCloudData() {
-        if (!dbClient) initSupabase();
-        if (!dbClient) return; // Prevent freezing if client fails to load
-        
-        try {
-            const { data, error } = await dbClient.from('kids_money').select('*');
-            if (!error && data) {
+    function fetchCloudData() {
+        makeCloudRequest(API_URL + "?select=*", "GET", null, function(err, data) {
+            if (!err && data) {
                 cachedKidsData = data;
                 populateDropdowns();
             }
-        } catch (e) {
-            console.error("Data call drop out:", e);
-        }
+        });
     }
 
     function populateDropdowns() {
-        const pSelect = document.getElementById('parent-child-select');
-        const cSelect = document.getElementById('child-login-select');
-        
-        const currentP = pSelect.value;
-        const currentC = cSelect.value;
+        var pSelect = document.getElementById('parent-child-select');
+        var cSelect = document.getElementById('child-login-select');
+        var currentP = pSelect.value;
+        var currentC = cSelect.value;
 
         pSelect.innerHTML = ""; cSelect.innerHTML = "";
         cachedKidsData.forEach(function(kid) {
@@ -163,45 +160,47 @@
     }
 
     function updateParentView() {
-        const name = document.getElementById('parent-child-select').value;
-        const kid = cachedKidsData.find(function(k) { return k.name === name; });
+        var name = document.getElementById('parent-child-select').value;
+        var kid = cachedKidsData.find(function(k) { return k.name === name; });
         if(!kid) return;
         document.getElementById('p-normal-bal').innerText = "$" + parseFloat(kid.normal_balance || 0).toFixed(2);
         document.getElementById('p-savings-bal').innerText = "$" + parseFloat(kid.savings_balance || 0).toFixed(2);
     }
 
-    async function submitTransaction() {
-        const name = document.getElementById('parent-child-select').value;
-        const account = document.getElementById('tx-account').value;
-        const type = document.getElementById('tx-type').value;
-        const amount = parseFloat(document.getElementById('tx-amount').value);
-        const reason = document.getElementById('tx-reason').value || "Allowance/Gift";
+    function submitTransaction() {
+        var name = document.getElementById('parent-child-select').value;
+        var account = document.getElementById('tx-account').value;
+        var type = document.getElementById('tx-type').value;
+        var amount = parseFloat(document.getElementById('tx-amount').value);
+        var reason = document.getElementById('tx-reason').value || "Allowance/Gift";
 
         if (isNaN(amount) || amount <= 0) return alert('Enter a valid amount');
-        const kid = cachedKidsData.find(function(k) { return k.name === name; });
-        const modifier = type === 'deposit' ? 1 : -1;
+        var kid = cachedKidsData.find(function(k) { return k.name === name; });
+        var modifier = type === 'deposit' ? 1 : -1;
 
-        let newNormal = parseFloat(kid.normal_balance || 0);
-        let newSavings = parseFloat(kid.savings_balance || 0);
+        var newNormal = parseFloat(kid.normal_balance || 0);
+        var newSavings = parseFloat(kid.savings_balance || 0);
         if (account === 'normal') newNormal += (amount * modifier);
         else newSavings += (amount * modifier);
 
-        let history = kid.history || [];
+        var history = kid.history || [];
         history.unshift({ date: new Date().toLocaleDateString(), account: account, type: type, amount: amount, reason: reason });
 
-        const { error } = await dbClient.from('kids_money')
-            .update({ normal_balance: newNormal, savings_balance: newSavings, history: history })
-            .eq('name', name);
+        var updateUrl = API_URL + "?name=eq." + encodeURIComponent(name);
+        var bodyData = { normal_balance: newNormal, savings_balance: newSavings, history: history };
 
-        if(!error) {
-            alert('Cloud Database Updated!');
-            document.getElementById('tx-amount').value = '';
-            document.getElementById('tx-reason').value = '';
-            await fetchCloudData();
-            updateParentView();
-        } else {
-            alert('Database update failed: ' + error.message);
-        }
+        makeCloudRequest(updateUrl, "PATCH", bodyData, function(err, data) {
+            if(!err) {
+                alert('Cloud Database Updated!');
+                document.getElementById('tx-amount').value = '';
+                document.getElementById('tx-reason').value = '';
+                fetchCloudData();
+                setTimeout(updateParentView, 500);
+            } else {
+                alert('Database update failed: ' + err);
+            }
+        });
     }
 
     function loginChild() {
+        var name = document.getElementById('child-login-select').value;
