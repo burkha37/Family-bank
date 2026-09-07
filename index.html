@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Family Cloud Bank</title>
-    <!-- Include Supabase Library for Cloud Syncing -->
-    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    <!-- Alternate Fallback CDN for Supabase -->
+    <script src="https://jsdelivr.net"></script>
     <style>
         :root { --primary: #2e7d32; --secondary: #1565c0; --background: #f5f5f5; --card: #ffffff; --text: #333333; }
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--background); color: var(--text); margin: 0; padding: 20px; }
@@ -100,21 +100,34 @@
     const SUPABASE_KEY = "sb_publishable_zVBgAlXVc182th_LDjIa4g_XStuTYk7";
     const PARENT_PIN = "1234"; 
 
-    // FIXED: Safely initializing the client library to prevent the launch crash
-    const dbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    let dbClient = null;
     let cachedKidsData = [];
 
+    // Safety initialization checker to avoid freeze scenarios
+    function initSupabase() {
+        try {
+            if (window.supabase && typeof window.supabase.createClient === 'function') {
+                dbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+            } else if (typeof supabase !== 'undefined' && typeof supabase.createClient === 'function') {
+                dbClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+            }
+        } catch(e) {
+            console.error("Initialization wrapper error:", e);
+        }
+    }
+
     async function fetchCloudData() {
+        if (!dbClient) initSupabase();
+        if (!dbClient) return; // Prevent freezing if client fails to load
+        
         try {
             const { data, error } = await dbClient.from('kids_money').select('*');
             if (!error && data) {
                 cachedKidsData = data;
                 populateDropdowns();
-            } else if (error) {
-                console.error("Database error:", error.message);
             }
         } catch (e) {
-            console.error("Database connection failed:", e);
+            console.error("Data call drop out:", e);
         }
     }
 
@@ -192,11 +205,3 @@
     }
 
     function loginChild() {
-        const name = document.getElementById('child-login-select').value;
-        const pin = document.getElementById('child-pin').value;
-        const kid = cachedKidsData.find(function(k) { return k.name === name; });
-
-        if (kid && kid.pin === pin) {
-            document.getElementById('child-pin').value = '';
-            switchScreen('screen-child-dash');
-            document.getElementById('child-welcome').innerText = "👋 Welcome, " + name + "!";
