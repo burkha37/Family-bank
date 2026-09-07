@@ -101,7 +101,7 @@
     const SUPABASE_KEY = "sb_publishable_zVBgAlXVc182th_LDjIa4g_XStuTYk7";
     const PARENT_PIN = "1234"; 
 
-    const supabase = sb.createClient(SUPABASE_URL, SUPABASE_KEY);
+    const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
     let cachedKidsData = [];
 
     async function fetchCloudData() {
