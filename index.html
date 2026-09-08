@@ -28,7 +28,7 @@
             background: var(--card);
             padding: 20px;
             border-radius: 12px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            box-shadow: 0 4px 6px rgba(0,0,0,.1);
         }
 
         h1, h2, h3 {
@@ -181,14 +181,10 @@
 
 <div class="container">
 
-    <!-- HOME SCREEN -->
+    <!-- HOME -->
     <div id="screen-home" class="screen active">
-
         <h1>🏠 Family Bank</h1>
-
-        <p style="text-align:center;">
-            Select portal to log in
-        </p>
+        <p style="text-align:center;">Select portal to log in</p>
 
         <button
             class="btn-parent"
@@ -201,7 +197,6 @@
             onclick="switchScreen('screen-child-login')">
             Kids Portal
         </button>
-
     </div>
 
 
@@ -249,34 +244,28 @@
 
         <select
             id="parent-child-select"
-            onchange="updateParentView">
+            onchange="updateParentView()">
         </select>
 
 
         <div class="balance-box">
 
             <div class="balance-card">
-
                 Normal Balance
-
                 <div
                     id="p-normal-bal"
                     class="balance-num">
                     $0.00
                 </div>
-
             </div>
 
             <div class="balance-card savings">
-
                 Savings Balance
-
                 <div
                     id="p-savings-bal"
                     class="balance-num">
                     $0.00
                 </div>
-
             </div>
 
         </div>
@@ -288,6 +277,7 @@
         <label>
             <b>2. Add Transaction:</b>
         </label>
+
 
         <select id="tx-account">
 
@@ -326,7 +316,7 @@
         <input
             type="text"
             id="tx-reason"
-            placeholder="Reason (e.g., Birthday, Chores)">
+            placeholder="Reason (Birthday, Chores, etc.)">
 
 
         <button
@@ -355,8 +345,7 @@
             Select Your Name:
         </label>
 
-        <select id="child-login-select">
-        </select>
+        <select id="child-login-select"></select>
 
 
         <input
@@ -421,10 +410,7 @@
         </div>
 
 
-        <h3>
-            📜 Recent History
-        </h3>
-
+        <h3>📜 Recent History</h3>
 
         <ul
             id="child-tx-list"
@@ -444,11 +430,14 @@
 </div>
 
 
+
 <script>
 
-    /* ============================================================
-       SUPABASE CONNECTION
-       ============================================================ */
+    /*
+    =====================================================
+    SUPABASE SETTINGS
+    =====================================================
+    */
 
     const API_URL =
         "https://frgmoryrkwtytyngxgnn.supabase.co/rest/v1/kids_money";
@@ -459,34 +448,20 @@
     const PARENT_PIN = "1234";
 
 
-    /* ============================================================
-       FALLBACK DATA
-       ============================================================ */
+    /*
+    =====================================================
+    DATA
+    =====================================================
+    */
 
-    let cachedKidsData = [
-
-        {
-            name: "Charlie",
-            pin: "0815",
-            normal_balance: 0,
-            savings_balance: 0,
-            history: []
-        },
-
-        {
-            name: "Jackie",
-            pin: "0915",
-            normal_balance: 0,
-            savings_balance: 0,
-            history: []
-        }
-
-    ];
+    let cachedKidsData = [];
 
 
-    /* ============================================================
-       SUPABASE REQUEST FUNCTION
-       ============================================================ */
+    /*
+    =====================================================
+    SUPABASE REQUEST
+    =====================================================
+    */
 
     function makeCloudRequest(
         url,
@@ -495,9 +470,7 @@
         callback
     ) {
 
-        var xhr =
-            new XMLHttpRequest();
-
+        var xhr = new XMLHttpRequest();
 
         xhr.open(
             method,
@@ -531,7 +504,7 @@
 
 
         xhr.onreadystatechange =
-            function () {
+            function() {
 
                 if (xhr.readyState !== 4) {
                     return;
@@ -547,9 +520,7 @@
 
                         var data =
                             xhr.responseText
-                                ? JSON.parse(
-                                    xhr.responseText
-                                )
+                                ? JSON.parse(xhr.responseText)
                                 : [];
 
                         callback(
@@ -559,9 +530,14 @@
 
                     } catch (e) {
 
+                        console.error(
+                            "JSON parsing error:",
+                            e
+                        );
+
                         callback(
-                            null,
-                            []
+                            "The database returned invalid data.",
+                            null
                         );
 
                     }
@@ -569,19 +545,21 @@
                 } else {
 
                     console.error(
-                        "Supabase Error:",
+                        "Supabase HTTP Error:",
                         xhr.status,
                         xhr.responseText
                     );
 
+
                     callback(
-                        xhr.responseText ||
-                        "Supabase API Error",
+                        "HTTP " +
+                        xhr.status +
+                        ": " +
+                        xhr.responseText,
                         null
                     );
 
                 }
-
             };
 
 
@@ -589,10 +567,10 @@
 
 
         xhr.ontimeout =
-            function () {
+            function() {
 
                 callback(
-                    "Connection timed out",
+                    "Connection timed out.",
                     null
                 );
 
@@ -600,10 +578,10 @@
 
 
         xhr.onerror =
-            function () {
+            function() {
 
                 callback(
-                    "Network connection error",
+                    "Network connection error.",
                     null
                 );
 
@@ -619,98 +597,269 @@
     }
 
 
-    /* ============================================================
-       GET DATA FROM SUPABASE
-       ============================================================ */
+
+    /*
+    =====================================================
+    LOAD KIDS FROM SUPABASE
+    =====================================================
+    */
 
     function fetchCloudData(showAlert) {
 
         if (
-            typeof showAlert ===
-            "undefined"
+            typeof showAlert === "undefined"
         ) {
-
             showAlert = true;
-
         }
 
 
+        var url =
+            API_URL +
+            "?select=id,name,pin,history,normal_balance,savings_balance" +
+            "&order=id.asc";
+
+
         makeCloudRequest(
-
-            API_URL + "?select=*",
-
+            url,
             "GET",
-
             null,
 
-            function (err, data) {
+            function(err, data) {
+
+                /*
+                ----------------------------
+                DATABASE ERROR
+                ----------------------------
+                */
+
+                if (err) {
+
+                    console.error(
+                        "Supabase read error:",
+                        err
+                    );
+
+
+                    showStatus(
+                        "Could not load Supabase data.",
+                        "error"
+                    );
+
+
+                    if (showAlert) {
+
+                        alert(
+                            "Supabase could not load the kids' accounts.\n\n" +
+                            "Error:\n" +
+                            err
+                        );
+
+                    }
+
+                    return;
+                }
+
+
+
+                /*
+                ----------------------------
+                NO ROWS RETURNED
+                ----------------------------
+                */
 
                 if (
-                    !err &&
-                    Array.isArray(data)
+                    !Array.isArray(data) ||
+                    data.length === 0
                 ) {
 
-                    cachedKidsData = data;
+                    console.error(
+                        "Supabase returned no rows:",
+                        data
+                    );
 
 
-                    cachedKidsData.forEach(
-                        function (kid) {
+                    showStatus(
+                        "Supabase returned no child records.",
+                        "error"
+                    );
 
-                            if (
-                                !Array.isArray(
-                                    kid.history
-                                )
-                            ) {
 
-                                kid.history = [];
+                    if (showAlert) {
 
-                            }
+                        alert(
+                            "Supabase connected, but no kids were returned.\n\n" +
+                            "This usually means the table permissions or RLS policy needs to be checked."
+                        );
+
+                    }
+
+                    return;
+                }
+
+
+
+                /*
+                ----------------------------
+                VERIFY DATABASE IDS
+                ----------------------------
+                */
+
+                var missingId =
+                    data.find(
+                        function(kid) {
+
+                            return (
+                                kid.id === null ||
+                                kid.id === undefined
+                            );
 
                         }
                     );
 
 
-                    populateDropdowns();
-
-                    updateParentView();
-
-
-                    if (showAlert) {
-
-                        alert(
-                            "Database synced successfully! 🎉"
-                        );
-
-                    }
-
-                } else {
+                if (missingId) {
 
                     console.error(
-                        "Supabase Sync Error:",
-                        err
+                        "Child missing ID:",
+                        missingId
+                    );
+
+
+                    showStatus(
+                        "A child record is missing its database ID.",
+                        "error"
                     );
 
 
                     if (showAlert) {
 
                         alert(
-                            "Could not connect to the database."
+                            "Supabase returned " +
+                            missingId.name +
+                            " without a database ID."
                         );
 
                     }
 
+                    return;
+                }
+
+
+
+                /*
+                ----------------------------
+                CLEAN UP RETURNED DATA
+                ----------------------------
+                */
+
+                data.forEach(
+                    function(kid) {
+
+                        if (
+                            !Array.isArray(kid.history)
+                        ) {
+
+                            kid.history = [];
+
+                        }
+
+
+                        kid.normal_balance =
+                            parseFloat(
+                                kid.normal_balance || 0
+                            );
+
+
+                        kid.savings_balance =
+                            parseFloat(
+                                kid.savings_balance || 0
+                            );
+
+                    }
+                );
+
+
+
+                /*
+                ----------------------------
+                STORE DATABASE DATA
+                ----------------------------
+                */
+
+                cachedKidsData = data;
+
+
+                console.log(
+                    "Kids successfully loaded from Supabase:",
+                    cachedKidsData
+                );
+
+
+
+                populateDropdowns();
+
+                updateParentView();
+
+
+                showStatus(
+                    "Connected to Supabase ✓",
+                    "success"
+                );
+
+
+                if (showAlert) {
+
+                    alert(
+                        "Database synced successfully! 🎉"
+                    );
+
                 }
 
             }
-
         );
 
     }
 
 
-    /* ============================================================
-       POPULATE DROPDOWNS
-       ============================================================ */
+
+    /*
+    =====================================================
+    STATUS MESSAGE
+    =====================================================
+    */
+
+    function showStatus(
+        message,
+        type
+    ) {
+
+        var status =
+            document.getElementById(
+                "parent-status"
+            );
+
+
+        if (!status) {
+            return;
+        }
+
+
+        status.textContent =
+            message;
+
+
+        status.className =
+            "status " + type;
+
+    }
+
+
+
+    /*
+    =====================================================
+    DROPDOWNS
+    =====================================================
+    */
 
     function populateDropdowns() {
 
@@ -730,9 +879,7 @@
             !pSelect ||
             !cSelect
         ) {
-
             return;
-
         }
 
 
@@ -744,13 +891,21 @@
             cSelect.value;
 
 
-        pSelect.innerHTML = "";
+        pSelect.innerHTML =
+            "";
 
-        cSelect.innerHTML = "";
+
+        cSelect.innerHTML =
+            "";
+
 
 
         cachedKidsData.forEach(
-            function (kid) {
+            function(kid) {
+
+                /*
+                Parent dropdown
+                */
 
                 var pOption =
                     document.createElement(
@@ -770,6 +925,11 @@
                     pOption
                 );
 
+
+
+                /*
+                Child dropdown
+                */
 
                 var cOption =
                     document.createElement(
@@ -793,19 +953,16 @@
         );
 
 
-        if (currentP) {
 
+        if (currentP) {
             pSelect.value =
                 currentP;
-
         }
 
 
         if (currentC) {
-
             cSelect.value =
                 currentC;
-
         }
 
 
@@ -814,7 +971,8 @@
             pSelect.options.length > 0
         ) {
 
-            pSelect.selectedIndex = 0;
+            pSelect.selectedIndex =
+                0;
 
         }
 
@@ -824,7 +982,8 @@
             cSelect.options.length > 0
         ) {
 
-            cSelect.selectedIndex = 0;
+            cSelect.selectedIndex =
+                0;
 
         }
 
@@ -834,16 +993,23 @@
     }
 
 
-    /* ============================================================
-       SCREEN NAVIGATION
-       ============================================================ */
 
-    function switchScreen(screenId) {
+    /*
+    =====================================================
+    SCREEN SWITCHING
+    =====================================================
+    */
+
+    function switchScreen(
+        screenId
+    ) {
 
         document
-            .querySelectorAll(".screen")
+            .querySelectorAll(
+                ".screen"
+            )
             .forEach(
-                function (screen) {
+                function(screen) {
 
                     screen.classList.remove(
                         "active"
@@ -865,14 +1031,24 @@
                 "active"
             );
 
+        } else {
+
+            console.error(
+                "Screen not found:",
+                screenId
+            );
+
         }
 
     }
 
 
-    /* ============================================================
-       PARENT LOGIN
-       ============================================================ */
+
+    /*
+    =====================================================
+    PARENT LOGIN
+    =====================================================
+    */
 
     function loginParent() {
 
@@ -896,10 +1072,10 @@
             );
 
 
-            populateDropdowns();
-
-            updateParentView();
-
+            /*
+            Load current database rows
+            every time parent logs in.
+            */
 
             fetchCloudData(false);
 
@@ -914,9 +1090,12 @@
     }
 
 
-    /* ============================================================
-       UPDATE PARENT BALANCES
-       ============================================================ */
+
+    /*
+    =====================================================
+    UPDATE PARENT BALANCES
+    =====================================================
+    */
 
     function updateParentView() {
 
@@ -931,21 +1110,33 @@
         }
 
 
-        var name =
-            select.value;
-
-
         var kid =
             cachedKidsData.find(
-                function (k) {
+                function(k) {
 
-                    return k.name === name;
+                    return (
+                        k.name ===
+                        select.value
+                    );
 
                 }
             );
 
 
         if (!kid) {
+
+            document.getElementById(
+                "p-normal-bal"
+            ).innerText =
+                "$0.00";
+
+
+            document.getElementById(
+                "p-savings-bal"
+            ).innerText =
+                "$0.00";
+
+
             return;
         }
 
@@ -970,9 +1161,12 @@
     }
 
 
-    /* ============================================================
-       SUBMIT TRANSACTION
-       ============================================================ */
+
+    /*
+    =====================================================
+    ADD / WITHDRAW MONEY
+    =====================================================
+    */
 
     function submitTransaction() {
 
@@ -1009,12 +1203,15 @@
 
 
         if (!reason) {
-
             reason =
                 "Allowance/Gift";
-
         }
 
+
+
+        /*
+        Validate amount
+        */
 
         if (
             isNaN(amount) ||
@@ -1022,19 +1219,25 @@
         ) {
 
             alert(
-                "Please enter a valid amount."
+                "Enter a valid amount."
             );
 
             return;
-
         }
 
 
+
+        /*
+        Find selected child
+        */
+
         var kid =
             cachedKidsData.find(
-                function (k) {
+                function(k) {
 
-                    return k.name === name;
+                    return (
+                        k.name === name
+                    );
 
                 }
             );
@@ -1043,13 +1246,45 @@
         if (!kid) {
 
             alert(
-                "Could not find that child."
+                "Could not find that child.\n\n" +
+                "Press Sync with Database Cloud and try again."
             );
 
             return;
-
         }
 
+
+
+        /*
+        IMPORTANT:
+        Verify that this is a real
+        Supabase database row.
+        */
+
+        if (
+            kid.id === null ||
+            kid.id === undefined
+        ) {
+
+            console.error(
+                "Kid has no database ID:",
+                kid
+            );
+
+
+            alert(
+                "This child does not have a database ID.\n\n" +
+                "Press Sync with Database Cloud and try again."
+            );
+
+            return;
+        }
+
+
+
+        /*
+        Calculate new balances
+        */
 
         var modifier =
             type === "deposit"
@@ -1084,6 +1319,11 @@
         }
 
 
+
+        /*
+        Do not allow negative balances
+        */
+
         if (
             newNormal < 0 ||
             newSavings < 0
@@ -1094,9 +1334,13 @@
             );
 
             return;
-
         }
 
+
+
+        /*
+        Transaction history
+        */
 
         var history =
             Array.isArray(kid.history)
@@ -1126,15 +1370,27 @@
         });
 
 
+        /*
+        Keep last 100 transactions
+        */
+
         if (
             history.length > 100
         ) {
 
             history =
-                history.slice(0, 100);
+                history.slice(
+                    0,
+                    100
+                );
 
         }
 
+
+
+        /*
+        Data to send to Supabase
+        */
 
         var updatedKid = {
 
@@ -1154,16 +1410,14 @@
         };
 
 
-        if (!kid.id) {
 
-            alert(
-                "This child record is missing its database ID."
-            );
+        /*
+        ID 1 = Charlie
+        ID 2 = Jackie
 
-            return;
-
-        }
-
+        Supabase will update only the
+        selected database row.
+        */
 
         var updateURL =
             API_URL +
@@ -1173,15 +1427,21 @@
             );
 
 
+
+        console.log(
+            "Updating database row:",
+            kid.id,
+            updatedKid
+        );
+
+
+
         makeCloudRequest(
-
             updateURL,
-
             "PATCH",
-
             updatedKid,
 
-            function (err, data) {
+            function(err, data) {
 
                 if (err) {
 
@@ -1193,13 +1453,20 @@
 
                     alert(
                         "Transaction failed.\n\n" +
-                        "This may be caused by Supabase Row Level Security (RLS) settings."
+                        "Supabase error:\n" +
+                        err +
+                        "\n\n" +
+                        "If this mentions permission or row-level security, the Supabase RLS policy needs to be updated."
                     );
 
                     return;
-
                 }
 
+
+
+                /*
+                Update local copy
+                */
 
                 kid.normal_balance =
                     updatedKid.normal_balance;
@@ -1213,8 +1480,14 @@
                     updatedKid.history;
 
 
+
                 updateParentView();
 
+
+
+                /*
+                Clear form
+                */
 
                 document.getElementById(
                     "tx-amount"
@@ -1224,6 +1497,7 @@
                 document.getElementById(
                     "tx-reason"
                 ).value = "";
+
 
 
                 var sign =
@@ -1248,16 +1522,27 @@
                     " Account."
                 );
 
-            }
 
+
+                /*
+                Reload from Supabase
+                to verify the saved amount.
+                */
+
+                fetchCloudData(false);
+
+            }
         );
 
     }
 
 
-    /* ============================================================
-       CHILD LOGIN
-       ============================================================ */
+
+    /*
+    =====================================================
+    CHILD LOGIN
+    =====================================================
+    */
 
     function loginChild() {
 
@@ -1275,9 +1560,11 @@
 
         var kid =
             cachedKidsData.find(
-                function (k) {
+                function(k) {
 
-                    return k.name === name;
+                    return (
+                        k.name === name
+                    );
 
                 }
             );
@@ -1286,12 +1573,13 @@
         if (!kid) {
 
             alert(
-                "Could not find that child."
+                "Could not find that child.\n\n" +
+                "The database may not have loaded yet."
             );
 
             return;
-
         }
+
 
 
         if (
@@ -1304,13 +1592,14 @@
             );
 
             return;
-
         }
+
 
 
         document.getElementById(
             "child-pin"
         ).value = "";
+
 
 
         document.getElementById(
@@ -1319,6 +1608,7 @@
             "Welcome, " +
             kid.name +
             "!";
+
 
 
         document.getElementById(
@@ -1330,6 +1620,7 @@
             ).toFixed(2);
 
 
+
         document.getElementById(
             "c-savings-bal"
         ).innerText =
@@ -1339,19 +1630,26 @@
             ).toFixed(2);
 
 
+
+        /*
+        Transaction history
+        */
+
         var list =
             document.getElementById(
                 "child-tx-list"
             );
 
 
-        list.innerHTML = "";
+        list.innerHTML =
+            "";
 
 
         var history =
             Array.isArray(kid.history)
                 ? kid.history
                 : [];
+
 
 
         if (
@@ -1378,10 +1676,12 @@
 
         } else {
 
+
             history
                 .slice(0, 20)
                 .forEach(
-                    function (tx) {
+                    function(tx) {
+
 
                         var li =
                             document.createElement(
@@ -1391,6 +1691,7 @@
 
                         li.className =
                             "tx-item";
+
 
 
                         var left =
@@ -1405,9 +1706,11 @@
                             );
 
 
+
                         left.innerText =
                             tx.reason ||
                             "Transaction";
+
 
 
                         var sign =
@@ -1424,19 +1727,12 @@
                             ).toFixed(2);
 
 
-                        if (
+
+                        right.className =
                             tx.type === "deposit"
-                        ) {
+                                ? "tx-deposit"
+                                : "tx-withdraw";
 
-                            right.className =
-                                "tx-deposit";
-
-                        } else {
-
-                            right.className =
-                                "tx-withdraw";
-
-                        }
 
 
                         li.appendChild(
@@ -1459,6 +1755,7 @@
         }
 
 
+
         switchScreen(
             "screen-child-dash"
         );
@@ -1466,9 +1763,12 @@
     }
 
 
-    /* ============================================================
-       LOGOUT
-       ============================================================ */
+
+    /*
+    =====================================================
+    LOGOUT
+    =====================================================
+    */
 
     function logout() {
 
@@ -1489,15 +1789,23 @@
     }
 
 
-    /* ============================================================
-       START APPLICATION
-       ============================================================ */
+
+    /*
+    =====================================================
+    START APP
+    =====================================================
+    */
 
     document.addEventListener(
         "DOMContentLoaded",
-        function () {
+        function() {
 
-            populateDropdowns();
+            /*
+            Load the actual Supabase rows.
+
+            Charlie should load as ID 1.
+            Jackie should load as ID 2.
+            */
 
             fetchCloudData(false);
 
